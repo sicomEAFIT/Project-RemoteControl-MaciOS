@@ -122,7 +122,27 @@
 }
 
 - (IBAction)sendHalt:(id)sender {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"¿Esta seguro?" message:@"Si continua se cerrarar la conexion, y se apagara el equipo, ¿Quiere continuar?" delegate:nil cancelButtonTitle:@"No" otherButtonTitles:@"Si", nil];
+    [alert setDelegate:self];
+    [alert setTag:10];
+    [alert show];
 }
+
+#pragma mark - UIAlertView DElegate
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 10) {
+        NSLog(@"%d", buttonIndex);
+        if (buttonIndex == 1) {
+            NSString *send = @"system halt";
+            [_socket writeData:[send dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
+            [_socket readDataWithTimeout:-1 tag:0];
+        }
+    }
+}
+
+#pragma mark - Keyboard responder
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {

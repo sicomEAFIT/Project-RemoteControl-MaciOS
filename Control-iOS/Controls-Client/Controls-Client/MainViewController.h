@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "GCDAsyncSocket.h"
 
-@interface MainViewController : UIViewController <GCDAsyncSocketDelegate>
+@interface MainViewController : UIViewController <GCDAsyncSocketDelegate, UIAlertViewDelegate>
 {
     BOOL isConnected;
     __weak IBOutlet UIImageView *serverStatusImage;    

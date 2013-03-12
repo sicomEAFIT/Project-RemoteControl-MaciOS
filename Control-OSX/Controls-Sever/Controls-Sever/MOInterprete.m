@@ -33,6 +33,12 @@
         [self appleScript:[NSString stringWithFormat:@"set volume output volume %ld", (long)[[cmd objectAtIndex:1] integerValue]]];
     }
     
+    if ([[cmd objectAtIndex:0] isEqualToString:@"system"]) {
+        if ([[cmd objectAtIndex:1] isEqualToString:@"halt"]) {
+            [self appleScript:[NSString stringWithFormat:@"tell app \"Finder\" to shut down"]];
+        }
+    }
+    
     if ([[cmd objectAtIndex:0] isEqualToString:@"keyboard"]) {
         if ([[cmd objectAtIndex:1] integerValue] > -1 && [[cmd objectAtIndex:1] integerValue] < 127) {
             [self appleScript:[NSString stringWithFormat:@"tell application \"System Events\" to key code %ld", (long)[[cmd objectAtIndex:1] integerValue]]];
