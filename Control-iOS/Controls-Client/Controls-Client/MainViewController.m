@@ -58,15 +58,42 @@
     NSString *send;
     UIButton *button = (UIButton *)sender;
     
-    if (button.tag == 11) {
-        send = @"itunes play";
+    switch (button.tag) {
+        case 11: // Boton "play / pause"
+            send = @"itunes play";
+            break;
+        case 12: // Boton ">>"
+            send = @"itunes next";
+            break;
+        case 13: // Boton "<<"
+            send = @"itunes prev";
+            break;
+        case 14: // Boton "<"
+            send = @"keyboard 123";
+            break;
+        case 15: // Boton "v"
+            send = @"keyboard 125";
+            break;
+        case 16: // Boton ">"
+            send = @"keyboard 124";
+            break;
+        case 17: // Boton "Espacio"
+            send = @"keyboard 49";
+            break;
+        case 18: // Boton "^"
+            send = @"keyboard 126";
+            break;
+        case 19: // Boton "Enter"
+            send = @"keyboard 36";
+            break;
+        case 20: // Boton "Borrar"
+            send = @"keyboard 51";
+            break;
+        default:
+            send = @"";
+            break;
     }
-    if (button.tag == 12) {
-        send = @"itunes next";
-    }
-    if (button.tag == 13) {
-        send = @"itunes prev";
-    }
+    
     
     [_socket writeData:[send dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
     [_socket readDataWithTimeout:-1 tag:0];
@@ -88,9 +115,13 @@
 - (IBAction)sendVolume:(id)sender {
     UISlider *slider = (UISlider *)sender;
     NSString *send = [NSString stringWithFormat:@"volume %d", (int)slider.value];
-    
+        
     [_socket writeData:[send dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
     [_socket readDataWithTimeout:-1 tag:0];
+    usleep(800);
+}
+
+- (IBAction)sendHalt:(id)sender {
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
@@ -103,15 +134,12 @@
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port
 {
-    [logLabel setText:[NSString stringWithFormat:@"%@[Se establecio una conexion con: %@, via puerto:%d]\n", logLabel.text, host, port]];
     [_socket readDataWithTimeout:-1 tag:0];
-    
 }
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
 {
-    NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    [logLabel setText:[NSString stringWithFormat:@"%@%@\n", logLabel.text, msg]];
+    //NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     [_socket readDataWithTimeout:-1 tag:0];
 }
 

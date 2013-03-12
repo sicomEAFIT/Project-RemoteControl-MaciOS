@@ -20,9 +20,14 @@
 @property (unsafe_unretained) IBOutlet NSTextView *logLabel;
 @property (unsafe_unretained) IBOutlet NSImageView *statusImage;
 @property (unsafe_unretained) IBOutlet NSTextField *numClients;
+@property (unsafe_unretained) IBOutlet NSTextField *portLabel;
+@property (unsafe_unretained) IBOutlet NSTextField *maxConnections;
+@property (unsafe_unretained) IBOutlet NSStepper *maxConnectionsCounter;
 
 - (IBAction)kernel:(id)sender;
 - (IBAction)clear:(id)sender;
+- (IBAction)connectionsChange:(id)sender;
+
 
 @end
 

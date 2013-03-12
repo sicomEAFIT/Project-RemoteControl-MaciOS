@@ -12,9 +12,7 @@
 @interface MainViewController : UIViewController <GCDAsyncSocketDelegate>
 {
     BOOL isConnected;
-    __weak IBOutlet UILabel *serverStatusLabel;
     __weak IBOutlet UIImageView *serverStatusImage;    
-    __weak IBOutlet UITextView *logLabel;
     __weak IBOutlet UITextField *addressLabel;
     __weak IBOutlet UITextField *portLabel;
 }
@@ -23,5 +21,6 @@
 - (IBAction)sendCommand:(id)sender;
 - (IBAction)kernel:(id)sender;
 - (IBAction)sendVolume:(id)sender;
+- (IBAction)sendHalt:(id)sender;
 
 @end

@@ -13,7 +13,7 @@
 @end
 
 @implementation MainViewController
-@synthesize addressLabel, logLabel, statusImage, numClients;
+@synthesize addressLabel, logLabel, statusImage, numClients, portLabel, maxConnections, maxConnectionsCounter;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -48,13 +48,23 @@
         
         if (!isConnected) {
             //Conectar el servidor
-            [socket acceptOnPort:4545 error:nil];
-            [addressLabel setStringValue:[[[NSHost currentHost] addresses] objectAtIndex:1]];
-            isConnected = YES;
+            if ([[portLabel stringValue] integerValue] > 1024 && [[portLabel stringValue] integerValue] < 65534) {
+                [socket acceptOnPort:[[portLabel stringValue] integerValue] error:nil];
+                [addressLabel setStringValue:[[[NSHost currentHost] addresses] objectAtIndex:1]];
+                
+                [logLabel addLine:@"[root: Servidor conectado]"];
+                [portLabel setEditable:NO];
+                isConnected = YES;
+            } else {
+                [[NSAlert alertWithMessageText:@"Advertencia: Puerto no valido" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Puerto no valido, elija un puerto entre el 1024 y el 65535. Puertos menores a 1024 estan reservados por el sistema."] runModal];
+            }
         } else {
             //Desconectar servidor
             [self disconnectAllUsers:YES server:YES];
             [addressLabel setStringValue:@""];
+            
+            [logLabel addLine:@"[root: Servidor desconectado]"];
+            [portLabel setEditable:YES];
             isConnected = NO;
         }
         
@@ -85,6 +95,13 @@
     [logLabel setString:@""];
 }
 
+- (IBAction)connectionsChange:(id)sender {
+    NSStepper *step = (NSStepper *)sender;
+    [maxConnections setStringValue:[NSString stringWithFormat:@"%ld Conexion (es) maxima (s)", step.integerValue]];
+}
+
+
+
 #pragma mark - Socket delegate
 
 - (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
@@ -93,20 +110,32 @@
         clients = [[NSMutableArray alloc] initWithCapacity:1];
     }
     
-    @synchronized (clients)
+    NSAlert *confirmConnection = [[NSAlert alloc] init];
+    [confirmConnection setMessageText:[NSString stringWithFormat:@"¿Aceptar la conexion de: %@?", [newSocket connectedHost]]];
+        
+    [confirmConnection setInformativeText:@"Este dispositivo podra contralar su equipo de forma remota."];
+    [confirmConnection addButtonWithTitle:@"Si"];
+    [confirmConnection addButtonWithTitle:@"No"];
+    [confirmConnection setAlertStyle:NSWarningAlertStyle];
+        
+    if([confirmConnection runModal] == 1001) //1000 <- Es si, 1001 <- Es no
     {
-        [clients addObject:newSocket];
+        [newSocket disconnect];
+        return;
     }
-    [logLabel addLine:[NSString stringWithFormat:@"[root: Nueva conexion de %@]", [newSocket connectedHost]]];
     
-    [newSocket readDataWithTimeout:-1 tag:0];
-    //[newSocket writeData:[welcome dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:1];
-    //[newSocket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
-}
-
-- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag
-{
-    //[sock readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
+    if ([clients count] < [maxConnectionsCounter integerValue]) {
+        @synchronized (clients)
+        {
+            [clients addObject:newSocket];
+        }
+        [logLabel addLine:[NSString stringWithFormat:@"[root: Nueva conexion de %@]", [newSocket connectedHost]]];
+        
+        [newSocket readDataWithTimeout:-1 tag:0];
+    } else {
+        [newSocket disconnect];
+        [[NSAlert alertWithMessageText:@"Error: Numero maximo de conexiones superado" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"No a sido posible la conexion debido a que se supero el numero maximo de conexiones, desconecte un cliente y vuelva a intentarlo"] runModal];
+    }
 }
 
 -(void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
@@ -121,14 +150,8 @@
     [sock readDataWithTimeout:-1 tag:0];
 }
 
-- (NSTimeInterval)socket:(GCDAsyncSocket *)sock shouldTimeoutReadWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
-{
-    return 0.0;
-}
-
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err
 {
-		
     [logLabel addLine:@"[root: Se desconecto un cliente]"];
 		
     @synchronized(clients)
